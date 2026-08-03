@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Testes visuais/responsivos — MVA landing page</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; color: #10241c; }
+  h1 { margin-bottom: 0.25rem; }
+  .hint { color: #4c5c54; font-size: 0.9rem; margin-bottom: 1.5rem; max-width: 70ch; }
+  .trs-summary { font-weight: 800; font-size: 1.1rem; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; }
+  .trs-ok { background: #d9f2e3; color: #06301f; }
+  .trs-fail { background: #fbdadd; color: #7a1520; }
+  .trs-suite { margin-bottom: 1rem; border: 1px solid #dfe6de; border-radius: 8px; padding: 0.75rem 1rem; }
+  .trs-suite h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+  .trs-suite ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; }
+  .trs-pass { color: #146b47; }
+  .trs-fail-item { color: #b3202f; font-weight: 700; }
+  #probe { position: absolute; left: -99999px; top: 0; border: 0; }
+</style>
+</head>
+<body>
+  <h1>Testes visuais e de responsividade</h1>
+  <p class="hint">
+    Redimensiona um iframe com a landing page real entre 320px e 2560px de largura e verifica, em cada
+    ponto, que a página não quebra (sem overflow horizontal), que o menu mobile aparece/some no
+    breakpoint certo, que botões mantêm alvo de toque mínimo (44px) e que as fórmulas/galeria com rolagem
+    própria não estouram o layout. Também confere a presença das seções e mídias essenciais.
+    Sirva a pasta com <code>python3 -m http.server</code> e abra este arquivo pelo navegador (iframes
+    para arquivos locais via <code>file://</code> costumam ser bloqueados por segurança).
+  </p>
+  <div id="mount"></div>
+  <iframe id="probe" src="../index.html" title="Instância da landing page usada nos testes visuais" height="9000"></iframe>
+
+  <script src="test-runner.js"></script>
+  <script>
+    (function () {
+      const { describe, it, assert, assertEqual, run, renderResults } = TestKit;
+      const WIDTHS = [320, 360, 375, 414, 768, 1024, 1280, 1440, 1920, 2560];
+      const iframe = document.getElementById("probe");
+
+      function nextFrame() {
+        return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      }
+
+      async function setWidth(w) {
+        iframe.style.width = w + "px";
+        await nextFrame();
+      }
+
+      iframe.addEventListener("load", async () => {
+        const doc = iframe.contentDocument;
+        const win = iframe.contentWindow;
+
+        describe("Estrutura essencial da página (conteúdo persuasivo completo)", () => {
+          const requiredSections = ["hero", "dor", "metodo", "pratique", "desafio", "curriculo", "galeria", "prof-ary", "oferta", "garantia", "faq"];
+          requiredSections.forEach((id) => {
+            it(`seção #${id} existe`, () => assert(!!doc.getElementById(id), `#${id} não encontrada`));
+          });
+
+          it("grade curricular tem os 5 módulos do roteiro", () => {
+            assertEqual(doc.querySelectorAll(".module-card").length, 5);
+          });
+
+          it("galeria de desafios tem itens navegáveis por arraste (scroll-snap)", () => {
+            const track = doc.querySelector(".gallery-track");
+            assert(!!track, "galeria não encontrada");
+            assert(track.querySelectorAll("figure").length >= 4, "esperava ao menos 4 desafios na galeria");
+          });
+
+          it("todas as imagens têm texto alternativo (alt) descritivo", () => {
+            const imgs = Array.from(doc.querySelectorAll("img"));
+            assert(imgs.length > 0, "nenhuma imagem encontrada");
+            imgs.forEach((img) => {
+              assert((img.getAttribute("alt") || "").trim().length > 5, `imagem sem alt descritivo: ${img.getAttribute("src")}`);
+            });
+          });
+
+          it("o vídeo-desafio (hero) aponta para o arquivo mp4 local com poster", () => {
+            const source = doc.querySelector(".hero video source");
+            const video = doc.querySelector(".hero video");
+            assert(!!source && /desafio-x\.mp4$/.test(source.getAttribute("src")), "source do vídeo não encontrado/errado");
+            assert(!!video.getAttribute("poster"), "vídeo sem poster definido");
+          });
+
+          it("link do Instagram do professor aponta para @matematicacomprofary", () => {
+            const link = doc.querySelector('footer a[href*="instagram.com"]');
+            assert(!!link, "link do instagram não encontrado no rodapé");
+            assert(/matematicacomprofary/.test(link.getAttribute("href")), "handle do instagram incorreto");
+          });
+
+          it("CTA principal do hero está presente e aponta para a oferta", () => {
+            const cta = doc.querySelector(".hero .btn-primary");
+            assert(!!cta, "CTA do hero não encontrado");
+            assert(cta.getAttribute("href") === "#oferta", "CTA do hero deveria apontar para #oferta");
+          });
+        });
+
+        const overflowResults = [];
+        const navToggleResults = [];
+        const touchTargetResults = [];
+        const scrollBoxResults = [];
+
+        for (const w of WIDTHS) {
+          await setWidth(w);
+
+          const docWidth = doc.documentElement.scrollWidth;
+          overflowResults.push({ w, docWidth, ok: docWidth <= w + 2 });
+
+          const navToggle = doc.getElementById("navToggle");
+          const displayed = win.getComputedStyle(navToggle).display !== "none";
+          const shouldShow = w <= 860;
+          navToggleResults.push({ w, displayed, shouldShow, ok: displayed === shouldShow });
+
+          const buttons = Array.from(doc.querySelectorAll(".btn"));
+          const tooSmall = buttons.filter((b) => b.getBoundingClientRect().height > 0 && b.getBoundingClientRect().height < 44);
+          touchTargetResults.push({ w, tooSmallCount: tooSmall.length, ok: tooSmall.length === 0 });
+
+          const scrollBoxes = Array.from(doc.querySelectorAll(".formula-scroll, .gallery-track"));
+          const overflowingBoxes = scrollBoxes.filter((el) => {
+            const parent = el.parentElement;
+            if (!parent) return false;
+            return el.getBoundingClientRect().width > parent.getBoundingClientRect().width + 2;
+          });
+          scrollBoxResults.push({ w, overflowingCount: overflowingBoxes.length, ok: overflowingBoxes.length === 0 });
+        }
+
+        describe("Sem overflow horizontal em nenhuma largura testada (320px–2560px)", () => {
+          overflowResults.forEach(({ w, docWidth, ok }) => {
+            it(`largura ${w}px → documento não ultrapassa a viewport (scrollWidth=${docWidth})`, () => assert(ok));
+          });
+        });
+
+        describe("Menu mobile aparece/some no breakpoint correto (860px)", () => {
+          navToggleResults.forEach(({ w, displayed, shouldShow, ok }) => {
+            it(`largura ${w}px → botão hamburguer ${shouldShow ? "visível" : "oculto"} (obtido: ${displayed})`, () => assert(ok));
+          });
+        });
+
+        describe("Alvos de toque (.btn) mantêm ao menos 44px de altura", () => {
+          touchTargetResults.forEach(({ w, tooSmallCount, ok }) => {
+            it(`largura ${w}px → nenhum botão abaixo de 44px (encontrados pequenos: ${tooSmallCount})`, () => assert(ok));
+          });
+        });
+
+        describe("Fórmulas e galeria com rolagem própria não estouram o layout", () => {
+          scrollBoxResults.forEach(({ w, overflowingCount, ok }) => {
+            it(`largura ${w}px → caixas de rolagem cabem no container pai (estourando: ${overflowingCount})`, () => assert(ok));
+          });
+        });
+
+        await setWidth(1280); // deixa a prévia num tamanho legível ao final
+
+        const results = await run();
+        const { failed } = renderResults(results, document.getElementById("mount"));
+        document.title = (failed ? `❌ (${failed} falhas) ` : "✅ ") + document.title;
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Testes unitários — MVA landing page</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; color: #10241c; }
+  h1 { margin-bottom: 0.25rem; }
+  .hint { color: #4c5c54; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .trs-summary { font-weight: 800; font-size: 1.1rem; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; }
+  .trs-ok { background: #d9f2e3; color: #06301f; }
+  .trs-fail { background: #fbdadd; color: #7a1520; }
+  .trs-suite { margin-bottom: 1rem; border: 1px solid #dfe6de; border-radius: 8px; padding: 0.75rem 1rem; }
+  .trs-suite h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+  .trs-suite ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; }
+  .trs-pass { color: #146b47; }
+  .trs-fail-item { color: #b3202f; font-weight: 700; }
+  iframe { width: 1280px; max-width: 100%; height: 900px; border: 1px solid #dfe6de; border-radius: 8px; }
+  .app-wrap { overflow: auto; margin-top: 2rem; }
+</style>
+</head>
+<body>
+  <h1>Testes unitários — cálculos e componentes interativos</h1>
+  <p class="hint">
+    Valida as funções puras de cálculo (frações, porcentagem, regra de três, equação) e o comportamento
+    dos componentes interativos (abas, FAQ, renderização de fórmulas via KaTeX) da landing page do MVA.
+    Sirva a pasta com <code>python3 -m http.server</code> e abra este arquivo pelo navegador.
+  </p>
+  <div id="mount"></div>
+
+  <div class="app-wrap">
+    <iframe id="app" src="../index.html" title="Instância da landing page usada nos testes"></iframe>
+  </div>
+
+  <script src="../script.js"></script>
+  <script src="test-runner.js"></script>
+  <script>
+    (function () {
+      const { describe, it, assert, assertEqual, run, renderResults } = TestKit;
+
+      function setVal(doc, id, val) {
+        const el = doc.getElementById(id);
+        if (!el) throw new Error(`Elemento #${id} não encontrado`);
+        el.value = val;
+      }
+
+      function fireInput(doc, id) {
+        const el = doc.getElementById(id);
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+
+      function click(doc, el) {
+        el.dispatchEvent(new doc.defaultView.MouseEvent("click", { bubbles: true }));
+      }
+
+      // ---- Pure calculation helpers exposed on window.MVA ----
+      describe("Funções puras (window.MVA)", () => {
+        it("gcd(12, 18) simplifica para 6", () => assertEqual(MVA.gcd(12, 18), 6));
+        it("gcd(0, 5) retorna 5 (evita quebrar simplificação de fração com numerador 0)", () =>
+          assertEqual(MVA.gcd(0, 5), 5));
+        it("gcd trata negativos via valor absoluto", () => assertEqual(MVA.gcd(-12, 18), 6));
+        it("fmt(1/3) arredonda para 4 casas e usa vírgula", () => assertEqual(MVA.fmt(1 / 3), "0,3333"));
+        it("fmt(NaN) retorna travessão", () => assertEqual(MVA.fmt(NaN), "—"));
+      });
+
+      const iframe = document.getElementById("app");
+      iframe.addEventListener("load", async () => {
+        const doc = iframe.contentDocument;
+
+        describe("Calculadora de Frações (Módulo 0)", () => {
+          it("1/2 + 1/3 = 5/6", () => {
+            setVal(doc, "fr-n1", 1);
+            setVal(doc, "fr-d1", 2);
+            setVal(doc, "fr-op", "add");
+            fireInput(doc, "fr-op");
+            setVal(doc, "fr-n2", 1);
+            setVal(doc, "fr-d2", 3);
+            fireInput(doc, "fr-n2");
+            const text = doc.getElementById("fr-result-text").textContent;
+            assert(text.includes("5/6"), `esperado conter "5/6", obtido: "${text}"`);
+          });
+
+          it("2/4 × 1/2 simplifica para 1/4 (não fica 2/8)", () => {
+            setVal(doc, "fr-n1", 2);
+            setVal(doc, "fr-d1", 4);
+            setVal(doc, "fr-op", "mul");
+            fireInput(doc, "fr-op");
+            setVal(doc, "fr-n2", 1);
+            setVal(doc, "fr-d2", 2);
+            fireInput(doc, "fr-n2");
+            const text = doc.getElementById("fr-result-text").textContent;
+            assert(text.includes("1/4"), `esperado fração simplificada 1/4, obtido: "${text}"`);
+          });
+
+          it("fórmula é renderizada pelo KaTeX (não fica como texto LaTeX cru)", () => {
+            const formulaEl = doc.getElementById("fr-formula");
+            const katexNode = formulaEl.querySelector(".katex");
+            assert(!!katexNode, "esperava um elemento .katex renderizado dentro de #fr-formula");
+            assert(!formulaEl.textContent.includes("\\frac"), "a fórmula não deveria mostrar LaTeX cru");
+          });
+        });
+
+        describe("Calculadora de Porcentagem (Módulo 0)", () => {
+          it("30% de 200 = 60", () => {
+            setVal(doc, "pc-percent", 30);
+            setVal(doc, "pc-valor", 200);
+            fireInput(doc, "pc-valor");
+            const text = doc.getElementById("pc-result-text").textContent;
+            assert(text.includes("60"), `esperado conter "60", obtido: "${text}"`);
+          });
+        });
+
+        describe("Calculadora de Regra de Três (Módulo 0)", () => {
+          it("4 está para 10 assim como 6 está para 15", () => {
+            setVal(doc, "r3-a", 4);
+            setVal(doc, "r3-b", 10);
+            setVal(doc, "r3-c", 6);
+            fireInput(doc, "r3-c");
+            const text = doc.getElementById("r3-result-text").textContent;
+            assert(text.includes("15"), `esperado x = 15, obtido: "${text}"`);
+          });
+
+          it("a = 0 mostra aviso em vez de travar", () => {
+            setVal(doc, "r3-a", 0);
+            fireInput(doc, "r3-a");
+            const text = doc.getElementById("r3-result-text").textContent;
+            assert(text.toLowerCase().includes("zero") || text.toLowerCase().includes("diferente"), `esperado aviso sobre zero, obtido: "${text}"`);
+            setVal(doc, "r3-a", 4);
+            fireInput(doc, "r3-a");
+          });
+        });
+
+        describe("Calculadora de Equação do 1º grau (Módulo 0)", () => {
+          it("3x + 7 = 22 resolve x = 5", () => {
+            setVal(doc, "eq-a", 3);
+            setVal(doc, "eq-b", 7);
+            setVal(doc, "eq-c", 22);
+            fireInput(doc, "eq-c");
+            const text = doc.getElementById("eq-result-text").textContent;
+            assert(text.includes("5"), `esperado x = 5, obtido: "${text}"`);
+          });
+        });
+
+        describe("Abas acessíveis (Módulo 0 na prática)", () => {
+          it("por padrão a aba Frações está selecionada e visível", () => {
+            const tab = doc.getElementById("tab-fracoes");
+            const panel = doc.getElementById("panel-fracoes");
+            assertEqual(tab.getAttribute("aria-selected"), "true");
+            assert(!panel.hidden, "painel de frações deveria estar visível por padrão");
+          });
+
+          it("clicar em Porcentagem troca a aba e o painel ativo", () => {
+            const tabPercent = doc.getElementById("tab-porcentagem");
+            const tabFracoes = doc.getElementById("tab-fracoes");
+            click(doc, tabPercent);
+            assertEqual(tabPercent.getAttribute("aria-selected"), "true");
+            assertEqual(tabFracoes.getAttribute("aria-selected"), "false");
+            assert(!doc.getElementById("panel-porcentagem").hidden, "painel de porcentagem deveria aparecer");
+            assert(doc.getElementById("panel-fracoes").hidden, "painel de frações deveria sumir");
+            // reset back to keep subsequent tests deterministic
+            click(doc, tabFracoes);
+          });
+        });
+
+        describe("Acordeão de FAQ", () => {
+          it("perguntas começam fechadas", () => {
+            const btn = doc.getElementById("faq-q1");
+            const answer = doc.getElementById("faq-a1");
+            assertEqual(btn.getAttribute("aria-expanded"), "false");
+            assert(answer.hidden, "resposta deveria começar oculta");
+          });
+
+          it("clicar na pergunta revela a resposta e atualiza aria-expanded", () => {
+            const btn = doc.getElementById("faq-q1");
+            const answer = doc.getElementById("faq-a1");
+            click(doc, btn);
+            assertEqual(btn.getAttribute("aria-expanded"), "true");
+            assert(!answer.hidden, "resposta deveria ficar visível após o clique");
+            click(doc, btn); // reset
+          });
+        });
+
+        describe("Fórmulas estáticas (hero e desafio viral)", () => {
+          it("a fórmula do desafio x^x^x... é renderizada com KaTeX", () => {
+            const nodes = doc.querySelectorAll("[data-katex] .katex, .challenge-formula .katex");
+            assert(nodes.length > 0, "esperava ao menos uma fórmula renderizada no desafio viral");
+          });
+
+          it("todas as fórmulas .katex têm largura e altura reais (não ficaram vazias)", () => {
+            const nodes = Array.from(doc.querySelectorAll(".katex"));
+            assert(nodes.length >= 5, `esperava pelo menos 5 fórmulas renderizadas na página, encontrei ${nodes.length}`);
+            nodes.forEach((n) => {
+              assert(n.offsetWidth > 0 && n.offsetHeight > 0, "fórmula KaTeX renderizada sem dimensões visíveis");
+            });
+          });
+        });
+
+        const results = await run();
+        const { failed } = renderResults(results, document.getElementById("mount"));
+        document.title = (failed ? `❌ (${failed} falhas) ` : "✅ ") + document.title;
+      });
+    })();
+  </script>
+</body>
+</html>
