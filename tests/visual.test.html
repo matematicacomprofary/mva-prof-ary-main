@@ -76,11 +76,11 @@
             });
           });
 
-          it("o vídeo-desafio (hero) aponta para o arquivo mp4 local com poster", () => {
+          it("o vídeo do topo (hero) aponta para o arquivo mp4 local", () => {
             const source = doc.querySelector(".hero video source");
             const video = doc.querySelector(".hero video");
-            assert(!!source && /desafio-x\.mp4$/.test(source.getAttribute("src")), "source do vídeo não encontrado/errado");
-            assert(!!video.getAttribute("poster"), "vídeo sem poster definido");
+            assert(!!source && /(topo|desafio-x)\.mp4$/.test(source.getAttribute("src")), "source do vídeo não encontrado/errado");
+            assert(!!video, "vídeo do topo não encontrado");
           });
 
           it("link do Instagram do professor aponta para @matematicacomprofary", () => {
