@@ -374,41 +374,113 @@ p {
 .phone-frame {
   width: min(280px, 78vw);
   aspect-ratio: 9 / 16;
-  border-radius: 28px;
-  background: #000;
-  padding: 10px;
-  box-shadow: var(--shadow-md), 0 0 0 2px rgba(255, 255, 255, 0.08) inset;
+  border-radius: 30px;
+  background: linear-gradient(160deg, var(--green-800), var(--green-900));
+  padding: 8px;
+  border: 2px solid rgba(255, 204, 0, 0.4);
+  box-shadow:
+    0 16px 40px rgba(6, 48, 31, 0.5),
+    0 0 24px rgba(255, 204, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
   position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.phone-frame:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 20px 48px rgba(6, 48, 31, 0.6),
+    0 0 32px rgba(255, 204, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
 }
 .phone-frame video {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 20px;
-  background: #000;
+  border-radius: 22px;
+  background: var(--green-900);
 }
 .phone-frame::before {
   content: "";
   position: absolute;
-  top: 18px;
+  top: 15px;
   left: 50%;
   transform: translateX(-50%);
-  width: 34%;
-  height: 8px;
+  width: 32%;
+  height: 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 204, 0, 0.45);
   z-index: 2;
 }
 .hero-media-caption {
   text-align: center;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 340px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.hero-media-caption .challenge-title {
+  margin: 0 0 0.25rem;
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.85);
-  max-width: 320px;
-  margin: 0;
+}
+.hero-media-caption .challenge-question {
+  margin: 0.25rem 0 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--gold-500);
 }
 .hero-media-caption .formula-scroll {
   justify-content: center;
-  margin-block: 0.5rem;
+  margin-block: 0.25rem;
+}
+.hero-media-caption .caption-hook {
+  margin-top: 0.75rem;
+  padding: 0.9rem 1.1rem;
+  background: linear-gradient(135deg, rgba(255, 204, 0, 0.12), rgba(20, 107, 71, 0.25));
+  border: 1.5px solid rgba(255, 204, 0, 0.4);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(6, 48, 31, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: center;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.hero-media-caption .caption-hook:hover {
+  border-color: rgba(255, 204, 0, 0.7);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(6, 48, 31, 0.35);
+}
+.hero-media-caption .hook-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  background: var(--gold-500);
+  color: var(--green-900);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  padding: 0.25em 0.75em;
+  border-radius: 999px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(255, 204, 0, 0.3);
+}
+.hero-media-caption .hook-question {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #fff;
+}
+.hero-media-caption .hook-call {
+  margin: 0;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
 }
 
 /* ---------- Formula display (KaTeX responsive wrapper) ---------- */
