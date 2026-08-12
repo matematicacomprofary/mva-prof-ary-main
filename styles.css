@@ -558,6 +558,9 @@ p {
 .method-card figure img {
   border-radius: var(--radius-md);
   border: 1px solid var(--line);
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 .method-card figcaption {
   font-size: 0.8rem;
@@ -732,14 +735,14 @@ p {
   min-width: 0;
 }
 .module-card .module-media {
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   background: var(--green-900);
 }
 .module-card .module-media img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 .module-card .module-body {
   padding: 1.1rem 1.25rem 1.4rem;
@@ -784,8 +787,9 @@ p {
 }
 .gallery-track img {
   aspect-ratio: 1 / 1;
-  object-fit: cover;
+  object-fit: contain;
   width: 100%;
+  background: var(--green-900);
 }
 .gallery-track figcaption {
   padding: 0.7rem 0.85rem 0.9rem;
