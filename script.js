@@ -256,6 +256,30 @@
     });
   }
 
+  /* ---------------- Video Play Overlay ---------------- */
+  function initVideoOverlays() {
+    document.querySelectorAll(".phone-frame").forEach((frame) => {
+      const video = frame.querySelector("video");
+      const btn = frame.querySelector(".phone-play-btn");
+      if (!video || !btn) return;
+
+      btn.addEventListener("click", () => {
+        video.muted = false;
+        const p = video.play();
+        if (p && typeof p.catch === "function") {
+          p.catch(() => {
+            video.muted = true;
+            video.play();
+          });
+        }
+      });
+
+      video.addEventListener("play", () => btn.classList.add("is-hidden"));
+      video.addEventListener("pause", () => btn.classList.remove("is-hidden"));
+      video.addEventListener("ended", () => btn.classList.remove("is-hidden"));
+    });
+  }
+
   function initFooterYear() {
     const el = document.getElementById("ano-atual");
     if (el) el.textContent = String(new Date().getFullYear());
@@ -271,6 +295,7 @@
     initFaq();
     initNav();
     initFooterYear();
+    initVideoOverlays();
   });
 
   // Expose for the visual test suite (loaded inside iframes pointing at this file).
