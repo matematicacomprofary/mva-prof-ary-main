@@ -967,22 +967,39 @@ p {
 }
 
 /* ---------- Guarantee ---------- */
+.guarantee {
+  background: #06301f;
+  color: var(--paper-2);
+  padding-block: clamp(2.25rem, 4vw, 3.75rem);
+}
 .guarantee .container {
-  max-width: 70ch;
+  max-width: 840px;
   text-align: center;
 }
-.guarantee-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 4.5rem;
-  height: 4.5rem;
-  border-radius: 50%;
-  background: var(--gold-500);
-  color: var(--green-900);
-  font-weight: 900;
-  font-size: 1.6rem;
+.guarantee-banner-wrapper {
   margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+}
+.guarantee-banner-img {
+  max-width: 100%;
+  width: 680px;
+  height: auto;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  display: block;
+}
+.guarantee-text {
+  font-size: clamp(1.05rem, 1.2vw + 0.85rem, 1.3rem);
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0 auto;
+  max-width: 760px;
+}
+.guarantee-text strong {
+  color: var(--gold-500);
+  font-weight: 700;
 }
 
 /* ---------- FAQ ---------- */
