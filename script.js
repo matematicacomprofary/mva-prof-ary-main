@@ -477,6 +477,11 @@
     initFooterYear();
     initVideoOverlays();
     initEbookModal();
+
+    // Abre o pop-up do E-book de Logaritmos assim que o site carrega
+    setTimeout(() => {
+      openEbookModal();
+    }, 400);
   });
 
   // Expose for testing suites

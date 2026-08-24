@@ -1258,6 +1258,47 @@ p {
   box-shadow: 0 12px 28px rgba(255, 204, 0, 0.45);
 }
 
+/* Button Pill E-book (estilo pílula verde com contorno branco e ícone colorido) */
+.btn-pill-ebook {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  background: var(--green-900);
+  color: #ffffff !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  border-radius: 9999px;
+  padding: 0.7em 1.75em;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 16px rgba(6, 48, 31, 0.35);
+  transition: all 0.25s ease;
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 1.2;
+}
+.btn-pill-ebook:hover {
+  background: var(--green-800);
+  border-color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(6, 48, 31, 0.5);
+  color: #ffffff !important;
+}
+.btn-pill-ebook:active {
+  transform: translateY(0);
+}
+.btn-pill-ebook.btn-block {
+  width: 100%;
+}
+.btn-pill-ebook .ebook-stack-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+
 /* ---------- Modal Pop-up ---------- */
 .modal-overlay {
   position: fixed;
