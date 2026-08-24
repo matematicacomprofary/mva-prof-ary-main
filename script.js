@@ -280,6 +280,186 @@
     });
   }
 
+  /* ---------------- E-book Lead Capture Modal & Validation ---------------- */
+  function validateEmail(email) {
+    if (!email || typeof email !== "string") return false;
+    const trimmed = email.trim();
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(trimmed);
+  }
+
+  function validatePhone(phone) {
+    if (!phone || typeof phone !== "string") return false;
+    const digits = phone.replace(/\D/g, "");
+    return digits.length >= 10 && digits.length <= 11;
+  }
+
+  function validateName(name) {
+    if (!name || typeof name !== "string") return false;
+    return name.trim().length >= 2;
+  }
+
+  function formatPhone(value) {
+    if (typeof value !== "string") return "";
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (!digits) return "";
+    if (digits.length <= 2) return `(${digits}`;
+    if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+  }
+
+  function openEbookModal() {
+    const modal = document.getElementById("ebookModal");
+    if (!modal) return;
+    modal.classList.add("is-active");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    const firstInput = modal.querySelector("#lead-name");
+    if (firstInput) {
+      setTimeout(() => firstInput.focus(), 100);
+    }
+  }
+
+  function closeEbookModal() {
+    const modal = document.getElementById("ebookModal");
+    if (!modal) return;
+    modal.classList.remove("is-active");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  function initEbookModal() {
+    const modal = document.getElementById("ebookModal");
+    const closeBtn = document.getElementById("closeEbookModal");
+    const form = document.getElementById("leadForm");
+    const nameInput = document.getElementById("lead-name");
+    const emailInput = document.getElementById("lead-email");
+    const phoneInput = document.getElementById("lead-phone");
+    const formContainer = document.getElementById("leadFormContainer");
+    const successContainer = document.getElementById("leadSuccess");
+
+    if (!modal) return;
+
+    // Triggers for opening the modal
+    document.querySelectorAll('[data-open-modal="ebookModal"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        openEbookModal();
+      });
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener("click", closeEbookModal);
+    }
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        closeEbookModal();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("is-active")) {
+        closeEbookModal();
+      }
+    });
+
+    // Dynamic Phone Masking
+    if (phoneInput) {
+      phoneInput.addEventListener("input", (e) => {
+        const startPos = e.target.selectionStart;
+        const oldLen = e.target.value.length;
+        e.target.value = formatPhone(e.target.value);
+        const newLen = e.target.value.length;
+        const diff = newLen - oldLen;
+        if (startPos !== null) {
+          e.target.setSelectionRange(startPos + diff, startPos + diff);
+        }
+      });
+    }
+
+    // Real-time error clearing
+    [nameInput, emailInput, phoneInput].forEach((input) => {
+      if (!input) return;
+      input.addEventListener("input", () => {
+        input.classList.remove("has-error");
+        const errEl = document.getElementById(`error-${input.name}`);
+        if (errEl) errEl.textContent = "";
+      });
+    });
+
+    // Form Submission with Validation
+    if (form) {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        let isValid = true;
+
+        const nameVal = nameInput ? nameInput.value : "";
+        const emailVal = emailInput ? emailInput.value : "";
+        const phoneVal = phoneInput ? phoneInput.value : "";
+
+        // Validate Name
+        const errName = document.getElementById("error-name");
+        if (!validateName(nameVal)) {
+          isValid = false;
+          if (nameInput) nameInput.classList.add("has-error");
+          if (errName) errName.textContent = "Por favor, digite seu nome completo.";
+        } else if (errName) {
+          errName.textContent = "";
+        }
+
+        // Validate Email
+        const errEmail = document.getElementById("error-email");
+        if (!validateEmail(emailVal)) {
+          isValid = false;
+          if (emailInput) emailInput.classList.add("has-error");
+          if (errEmail) errEmail.textContent = "Por favor, informe um e-mail válido (ex: nome@email.com).";
+        } else if (errEmail) {
+          errEmail.textContent = "";
+        }
+
+        // Validate Phone
+        const errPhone = document.getElementById("error-phone");
+        if (!validatePhone(phoneVal)) {
+          isValid = false;
+          if (phoneInput) phoneInput.classList.add("has-error");
+          if (errPhone) errPhone.textContent = "Por favor, informe um telefone/WhatsApp válido com DDD.";
+        } else if (errPhone) {
+          errPhone.textContent = "";
+        }
+
+        if (!isValid) return;
+
+        // Save Lead to localStorage
+        try {
+          const leads = JSON.parse(localStorage.getItem("mva_leads") || "[]");
+          leads.push({
+            name: nameVal.trim(),
+            email: emailVal.trim(),
+            phone: phoneVal.trim(),
+            timestamp: new Date().toISOString(),
+          });
+          localStorage.setItem("mva_leads", JSON.stringify(leads));
+        } catch (err) {
+          console.warn("Storage exception:", err);
+        }
+
+        // Show Success View
+        if (formContainer && successContainer) {
+          formContainer.hidden = true;
+          successContainer.hidden = false;
+        }
+
+        // Automatically open the Ebook Google Drive link in a new tab
+        const ebookUrl = "https://drive.google.com/file/d/16Q_omXgN6F1viClse3oT4OeBMDKe_oAq/view?usp=drive_link";
+        setTimeout(() => {
+          window.open(ebookUrl, "_blank");
+        }, 800);
+      });
+    }
+  }
+
   function initFooterYear() {
     const el = document.getElementById("ano-atual");
     if (el) el.textContent = String(new Date().getFullYear());
@@ -296,13 +476,21 @@
     initNav();
     initFooterYear();
     initVideoOverlays();
+    initEbookModal();
   });
 
-  // Expose for the visual test suite (loaded inside iframes pointing at this file).
+  // Expose for testing suites
   window.MVA = {
     renderMath,
     renderStaticFormulas,
     gcd,
     fmt,
+    validateEmail,
+    validatePhone,
+    validateName,
+    formatPhone,
+    openEbookModal,
+    closeEbookModal,
   };
 })();
+

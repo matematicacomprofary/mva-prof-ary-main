@@ -196,6 +196,40 @@
           });
         });
 
+        describe("Validação e captura de leads do E-book (window.MVA)", () => {
+          it("validateEmail aceita e-mails válidos e rejeita formatos incorretos", () => {
+            assert(MVA.validateEmail("aluno@gmail.com"), "deveria aceitar aluno@gmail.com");
+            assert(MVA.validateEmail("prof.ary@mva.com.br"), "deveria aceitar prof.ary@mva.com.br");
+            assert(!MVA.validateEmail("alunogmail.com"), "deveria rejeitar sem @");
+            assert(!MVA.validateEmail("aluno@gmail"), "deveria rejeitar sem domínio .com/.br");
+            assert(!MVA.validateEmail(""), "deveria rejeitar string vazia");
+          });
+
+          it("validatePhone valida DDD e quantidade de dígitos (10 ou 11)", () => {
+            assert(MVA.validatePhone("(11) 99999-8888"), "deveria aceitar celular de 11 dígitos");
+            assert(MVA.validatePhone("1133334444"), "deveria aceitar fixo de 10 dígitos");
+            assert(!MVA.validatePhone("119999"), "deveria rejeitar menos de 10 dígitos");
+            assert(!MVA.validatePhone(""), "deveria rejeitar string vazia");
+          });
+
+          it("formatPhone aplica a máscara de telefone corretamente", () => {
+            assertEqual(MVA.formatPhone("11999998888"), "(11) 99999-8888");
+            assertEqual(MVA.formatPhone("1133334444"), "(11) 3333-4444");
+          });
+
+          it("abertura e fechamento do modal alteram classes e aria-hidden", () => {
+            const modal = doc.getElementById("ebookModal");
+            assert(!!modal, "modal #ebookModal não encontrado");
+            MVA.openEbookModal();
+            assert(modal.classList.contains("is-active"), "modal deveria ter a classe is-active");
+            assertEqual(modal.getAttribute("aria-hidden"), "false");
+
+            MVA.closeEbookModal();
+            assert(!modal.classList.contains("is-active"), "modal não deveria ter a classe is-active");
+            assertEqual(modal.getAttribute("aria-hidden"), "true");
+          });
+        });
+
         const results = await run();
         const { failed } = renderResults(results, document.getElementById("mount"));
         document.title = (failed ? `❌ (${failed} falhas) ` : "✅ ") + document.title;

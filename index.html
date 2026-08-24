@@ -29,6 +29,7 @@
       <a href="#curriculo">Conteúdo</a>
       <a href="#prof-ary">Prof. Ary</a>
       <a href="#faq">Dúvidas</a>
+      <a href="#ebook" data-open-modal="ebookModal">E-book Grátis 📚</a>
       <a class="btn btn-primary" href="#oferta">Quero começar</a>
     </nav>
   </div>
@@ -46,6 +47,7 @@
         <p class="sub">Aprenda matemática do jeito certo, sem complicação e no seu ritmo. Com o passo a passo do Professor Ary, você entende a matéria de verdade, tira nota alta na escola e alcança <strong>mais de 800 pontos no ENEM</strong> — mesmo se achar que matemática não é para você.</p>
         <div class="cta-row">
           <a class="btn btn-primary btn-lg" href="#oferta">QUERO DESTRAVAR MINHA NOTA EM MATEMÁTICA</a>
+          <button type="button" class="btn btn-outline btn-lg" data-open-modal="ebookModal">📚 BAIXAR E-BOOK GRATUITO</button>
         </div>
         <ul class="hero-stats">
           <li><strong>29 mil+</strong> seguidores no Instagram</li>
@@ -267,6 +269,39 @@
             <div class="formula-scroll"><span id="eq-formula"></span></div>
             <p class="result-line" id="eq-result-text"></p>
             <p class="calc-note">O mesmo raciocínio passo a passo (isolar x) é usado depois em funções e geometria — é a base de tudo.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EBOOK GRATUITO -->
+  <section class="ebook-section" id="ebook">
+    <div class="container">
+      <div class="ebook-card">
+        <div class="ebook-content">
+          <div class="ebook-text">
+            <span class="ebook-badge">📚 MATERIAL 100% GRATUITO</span>
+            <h2>O Guia Definitivo da Matemática no ENEM</h2>
+            <p>Descubra os tópicos mais cobrados, macetes visuais exclusivos do Prof. Ary e o passo a passo para não travar na hora da prova. Conteúdo prático e direto em formato PDF para você estudar onde quiser.</p>
+            <ul class="ebook-highlights">
+              <li>⚡ Resumo visual dos 5 assuntos mais cobrados no ENEM</li>
+              <li>⚡ Métodos práticos para resolver questões sem decoreba</li>
+              <li>⚡ Exercícios comentados com gabarito passo a passo</li>
+            </ul>
+            <button type="button" class="btn btn-gold btn-lg" data-open-modal="ebookModal">
+              <span>BAIXAR E-BOOK GRATUITO AGORA</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+          </div>
+          <div class="ebook-mockup" aria-hidden="true">
+            <div class="book-cover">
+              <span class="book-tag">E-BOOK PDF</span>
+              <div class="book-title">MATEMÁTICA<br>NO ENEM</div>
+              <div class="book-subtitle">MVA · Prof. Ary</div>
+              <div class="book-icon">Σ</div>
+              <div class="book-footer">Guia Prático e Visual</div>
+            </div>
           </div>
         </div>
       </div>
@@ -516,6 +551,60 @@
     <a href="https://www.instagram.com/matematicacomprofary/" target="_blank" rel="noopener noreferrer">@matematicacomprofary</a>
   </div>
 </footer>
+
+<!-- POPUP MODAL CAPTURA DE LEADS -->
+<div class="modal-overlay" id="ebookModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modalTitle">
+  <div class="modal-card">
+    <button type="button" class="modal-close" id="closeEbookModal" aria-label="Fechar janela modal">&times;</button>
+
+    <div id="leadFormContainer">
+      <div class="modal-header">
+        <span class="modal-badge">🚀 MATERIAL GRATUITO</span>
+        <h3 id="modalTitle">Onde devemos enviar o seu E-book?</h3>
+        <p>Preencha os campos obrigatórios abaixo para baixar instantaneamente o guia definitivo do Prof. Ary.</p>
+      </div>
+
+      <form id="leadForm" class="modal-form" novalidate>
+        <div class="form-group">
+          <label for="lead-name">Seu Nome Completo <span class="req-star">*</span></label>
+          <input type="text" id="lead-name" name="name" placeholder="Ex: João Silva" required autocomplete="name" />
+          <span class="error-msg" id="error-name" aria-live="polite"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="lead-email">Seu E-mail Principal <span class="req-star">*</span></label>
+          <input type="email" id="lead-email" name="email" placeholder="seuemail@exemplo.com" required autocomplete="email" />
+          <span class="error-msg" id="error-email" aria-live="polite"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="lead-phone">Telefone / WhatsApp <span class="req-star">*</span></label>
+          <input type="tel" id="lead-phone" name="phone" placeholder="(11) 99999-9999" required autocomplete="tel" maxlength="15" />
+          <span class="error-msg" id="error-phone" aria-live="polite"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="btnSubmitLead">
+          <span>BAIXAR E-BOOK GRATUITA AQUI</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+
+        <p class="privacy-note">🔒 Seus dados estão 100% seguros. Não enviamos SPAM.</p>
+      </form>
+    </div>
+
+    <!-- Tela de Sucesso -->
+    <div id="leadSuccess" class="modal-success" hidden>
+      <div class="success-icon" aria-hidden="true">✓</div>
+      <h3>Parabéns! E-book liberado!</h3>
+      <p class="success-msg">Seu E-book em PDF já está pronto para leitura. Se o link não abrir automaticamente em uma nova aba, clique no botão abaixo para acessar agora mesmo:</p>
+      
+      <a id="downloadEbookLink" href="https://drive.google.com/file/d/16Q_omXgN6F1viClse3oT4OeBMDKe_oAq/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-lg btn-block">
+        <span>ABRIR E-BOOK GRATUITO (PDF) 📚</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>
+    </div>
+  </div>
+</div>
 
 <script src="vendor/katex/katex.min.js"></script>
 <script src="script.js"></script>

@@ -53,7 +53,7 @@
         const win = iframe.contentWindow;
 
         describe("Estrutura essencial da página (conteúdo persuasivo completo)", () => {
-          const requiredSections = ["hero", "dor", "metodo", "pratique", "desafio", "curriculo", "galeria", "prof-ary", "oferta", "garantia", "faq"];
+          const requiredSections = ["hero", "dor", "metodo", "pratique", "ebook", "desafio", "curriculo", "galeria", "prof-ary", "oferta", "garantia", "faq"];
           requiredSections.forEach((id) => {
             it(`seção #${id} existe`, () => assert(!!doc.getElementById(id), `#${id} não encontrada`));
           });
