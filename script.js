@@ -309,6 +309,32 @@
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
   }
 
+  const GOOGLE_FORM_ACTION_URL =
+    "https://docs.google.com/forms/d/e/1FAIpQLScd2h7FPJkVILjrH5takYr5x7pJaj5hqARpA107xDeZrtgb9w/formResponse";
+  const GOOGLE_FORM_ENTRIES = {
+    name: "entry.66130009",
+    email: "entry.1207926798",
+    phone: "entry.1795649850",
+  };
+
+  /**
+   * Envia os dados do formulário de lead em segundo plano ("debaixo dos panos") para o Google Forms.
+   */
+  function sendLeadToGoogleForm(name, email, phone) {
+    const formData = new FormData();
+    formData.append(GOOGLE_FORM_ENTRIES.name, (name || "").trim());
+    formData.append(GOOGLE_FORM_ENTRIES.email, (email || "").trim());
+    formData.append(GOOGLE_FORM_ENTRIES.phone, (phone || "").trim());
+
+    return fetch(GOOGLE_FORM_ACTION_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: formData,
+    }).catch((err) => {
+      console.warn("Envio para Google Forms em segundo plano falhou:", err);
+    });
+  }
+
   function openEbookModal() {
     const modal = document.getElementById("ebookModal");
     if (!modal) return;
@@ -431,6 +457,9 @@
 
         if (!isValid) return;
 
+        // Send lead to Google Form silently ("debaixo dos panos")
+        sendLeadToGoogleForm(nameVal, emailVal, phoneVal);
+
         // Save Lead to localStorage
         try {
           const leads = JSON.parse(localStorage.getItem("mva_leads") || "[]");
@@ -496,6 +525,9 @@
     formatPhone,
     openEbookModal,
     closeEbookModal,
+    sendLeadToGoogleForm,
+    GOOGLE_FORM_ACTION_URL,
+    GOOGLE_FORM_ENTRIES,
   };
 })();
 

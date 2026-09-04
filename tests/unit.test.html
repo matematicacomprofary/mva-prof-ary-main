@@ -228,6 +228,43 @@
             assert(!modal.classList.contains("is-active"), "modal não deveria ter a classe is-active");
             assertEqual(modal.getAttribute("aria-hidden"), "true");
           });
+
+          it("sendLeadToGoogleForm possui URL do formulário e mapeamento correto de entries", () => {
+            assertEqual(
+              MVA.GOOGLE_FORM_ACTION_URL,
+              "https://docs.google.com/forms/d/e/1FAIpQLScd2h7FPJkVILjrH5takYr5x7pJaj5hqARpA107xDeZrtgb9w/formResponse"
+            );
+            assertEqual(MVA.GOOGLE_FORM_ENTRIES.name, "entry.66130009");
+            assertEqual(MVA.GOOGLE_FORM_ENTRIES.email, "entry.1207926798");
+            assertEqual(MVA.GOOGLE_FORM_ENTRIES.phone, "entry.1795649850");
+          });
+
+          it("sendLeadToGoogleForm realiza requisição POST com FormData com os dados do usuário", () => {
+            let fetchCalled = false;
+            let targetUrl = "";
+            let fetchOptions = null;
+            const originalFetch = window.fetch;
+            window.fetch = function (url, options) {
+              fetchCalled = true;
+              targetUrl = url;
+              fetchOptions = options;
+              return Promise.resolve(new Response(null, { status: 200 }));
+            };
+
+            try {
+              MVA.sendLeadToGoogleForm("João Silva", "joao@exemplo.com", "(11) 98888-7777");
+              assert(fetchCalled, "fetch deveria ter sido chamado");
+              assertEqual(targetUrl, MVA.GOOGLE_FORM_ACTION_URL);
+              assertEqual(fetchOptions.method, "POST");
+              assertEqual(fetchOptions.mode, "no-cors");
+              assert(fetchOptions.body instanceof FormData, "body deve ser FormData");
+              assertEqual(fetchOptions.body.get("entry.66130009"), "João Silva");
+              assertEqual(fetchOptions.body.get("entry.1207926798"), "joao@exemplo.com");
+              assertEqual(fetchOptions.body.get("entry.1795649850"), "(11) 98888-7777");
+            } finally {
+              window.fetch = originalFetch;
+            }
+          });
         });
 
         const results = await run();
