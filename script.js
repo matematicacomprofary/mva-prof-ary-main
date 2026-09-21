@@ -282,8 +282,82 @@
 
   /* ---------------- E-book Lead Capture Modal & Validation ---------------- */
   /**
+   * Domínios fictícios, de teste ou genéricos que devem ser rejeitados.
+   */
+  const FAKE_DOMAINS = new Set([
+    "teste.com", "teste.com.br", "teste.net", "teste.org",
+    "test.com", "test.com.br", "test.net", "test.org", "test.co", "test.io",
+    "exemplo.com", "exemplo.com.br", "exemplo.net", "exemplo.org",
+    "example.com", "example.com.br", "example.net", "example.org", "example.edu",
+    "domain.com", "domain.com.br", "dominio.com", "dominio.com.br",
+    "email.com", "email.com.br", "meuemail.com", "meuemail.com.br", "seuemail.com",
+    "fake.com", "fake.com.br", "fake.org", "fakemail.com",
+    "sample.com", "sample.net", "sample.org",
+    "foo.com", "bar.com", "foobar.com", "baz.com",
+    "asdf.com", "qwerty.com", "abc.com", "xyz.com", "123.com", "123.org",
+    "site.com", "sitenome.com", "meusite.com", "meusite.com.br",
+    "sememail.com", "naotenho.com", "naotenhoemail.com", "naotem.com",
+    "none.com", "null.com", "undefined.com", "temp.com", "dummy.com", "testmail.com"
+  ]);
+
+  /**
+   * Domínios de e-mail temporários ou descartáveis.
+   */
+  const DISPOSABLE_DOMAINS = new Set([
+    "mailinator.com", "tempmail.com", "guerrillamail.com", "10minutemail.com",
+    "trashmail.com", "dispostable.com", "throwawaymail.com", "yopmail.com",
+    "sharklasers.com", "maildrop.cc", "getnada.com", "temp-mail.org",
+    "fakeinbox.com", "dropmail.me", "mohmal.com", "boun.cr", "mailnesia.com",
+    "crazymailing.com", "tmailor.com", "inboxkitten.com"
+  ]);
+
+  /**
+   * Erros de digitação comuns de provedores populares e suas sugestões.
+   */
+  const TYPO_SUGGESTIONS = {
+    "gmai.com": "@gmail.com",
+    "gmaill.com": "@gmail.com",
+    "gamil.com": "@gmail.com",
+    "gmal.com": "@gmail.com",
+    "gmai.co": "@gmail.com",
+    "gmaill.co": "@gmail.com",
+    "gmai.com.br": "@gmail.com",
+    "gmaill.com.br": "@gmail.com",
+    "gamil.com.br": "@gmail.com",
+    "hotmai.com": "@hotmail.com",
+    "hotmial.com": "@hotmail.com",
+    "hotmal.com": "@hotmail.com",
+    "hotmai.co": "@hotmail.com",
+    "hotmial.com.br": "@hotmail.com.br",
+    "hotmai.com.br": "@hotmail.com.br",
+    "outloo.com": "@outlook.com",
+    "outlok.com": "@outlook.com",
+    "outlok.com.br": "@outlook.com.br",
+    "outloo.com.br": "@outlook.com.br",
+    "yaho.com": "@yahoo.com",
+    "yahooo.com": "@yahoo.com",
+    "yaho.com.br": "@yahoo.com.br",
+    "yahooo.com.br": "@yahoo.com.br",
+    "iclou.com": "@icloud.com",
+    "icloud.co": "@icloud.com",
+  };
+
+  /**
+   * TLDs (Top-Level Domains) conhecidos e válidos para a internet global e nacional.
+   */
+  const VALID_TLDS = new Set([
+    "com", "br", "net", "org", "edu", "gov", "mil", "io", "app", "tech",
+    "me", "co", "info", "dev", "store", "online", "site", "live", "club",
+    "digital", "expert", "academy", "space", "website", "xyz", "pro", "tv",
+    "cc", "lat", "cloud", "link", "blog", "biz", "us", "uk", "ca", "fr",
+    "de", "es", "it", "pt", "ar", "mx", "cl", "uy", "py", "pe", "bo",
+    "ec", "ve", "ai", "design", "media", "global", "agency", "solutions",
+    "group", "world", "life", "work", "today", "fit", "art", "studio"
+  ]);
+
+  /**
    * Valida se o domínio do e-mail possui formato e TLD válidos,
-   * além de ignorar TLDs inválidos, domínios temporários e erros de digitação comuns.
+   * rejeitando domínios de teste/falsos, temporários e erros de digitação comuns.
    */
   function validateEmailDomain(domain) {
     if (!domain || typeof domain !== "string") return false;
@@ -304,12 +378,15 @@
     // O TLD (Top-Level Domain) é o último segmento (ex: "com", "br")
     const tld = parts[parts.length - 1];
 
-    // O TLD deve conter apenas letras e ter no mínimo 2 caracteres (rejeita ".c", ".123", etc.)
+    // O TLD deve conter apenas letras e ter no mínimo 2 caracteres
     if (!/^[a-z]{2,}$/.test(tld)) return false;
 
-    // TLDs reservados ou não roteáveis (RFC 2606 / RFC 6761)
+    // TLDs reservados ou não roteáveis
     const invalidTLDs = new Set(["invalid", "local", "localhost", "test", "example", "internal", "onion"]);
     if (invalidTLDs.has(tld)) return false;
+
+    // Verifica se o TLD é um TLD reconhecido
+    if (!VALID_TLDS.has(tld)) return false;
 
     // Validação dos rótulos/subdomínios
     for (let i = 0; i < parts.length; i++) {
@@ -318,33 +395,23 @@
       if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(label)) return false;
     }
 
-    // Domínios de e-mail temporários ou descartáveis
-    const disposableDomains = new Set([
-      "mailinator.com",
-      "tempmail.com",
-      "guerrillamail.com",
-      "10minutemail.com",
-      "trashmail.com",
-      "dispostable.com",
-      "throwawaymail.com",
-      "yopmail.com",
-      "sharklasers.com",
-      "maildrop.cc",
-      "getnada.com",
-      "temp-mail.org",
-      "fakeinbox.com",
-    ]);
-    if (disposableDomains.has(d)) return false;
+    // Rejeita domínios fictícios, de teste ou genéricos
+    if (FAKE_DOMAINS.has(d)) return false;
 
-    // Erros de digitação comuns de domínios populares
-    const typoDomains = new Set([
-      "gmai.com", "gmaill.com", "gamil.com", "gmal.com", "gmai.co", "gmaill.co", "gmai.com.br", "gmaill.com.br", "gamil.com.br",
-      "hotmai.com", "hotmial.com", "hotmal.com", "hotmai.co", "hotmial.com.br", "hotmai.com.br",
-      "outloo.com", "outlok.com", "outlok.com.br", "outloo.com.br",
-      "yaho.com", "yahooo.com", "yaho.com.br", "yahooo.com.br",
-      "iclou.com", "icloud.co",
-    ]);
-    if (typoDomains.has(d)) return false;
+    // Rejeita domínios de e-mail temporários ou descartáveis
+    if (DISPOSABLE_DOMAINS.has(d)) return false;
+
+    // Rejeita domínios com erros de digitação conhecidos
+    if (TYPO_SUGGESTIONS[d]) return false;
+
+    // Validação de padrões suspeitos no nome principal do domínio (primeira parte antes do TLD)
+    const mainLabel = parts[0];
+    // Rejeita se for composto apenas por números (ex: 12345.com)
+    if (/^\d+$/.test(mainLabel)) return false;
+    // Rejeita se composto por uma única letra repetida (ex: aaa.com, bbb.com)
+    if (/^([a-z])\1+$/.test(mainLabel)) return false;
+    // Rejeita sequências de digitação no teclado (ex: asdf.com, qwerty.com)
+    if (/^(asdf|qwerty|zxcv|123456?)$/.test(mainLabel)) return false;
 
     return true;
   }
@@ -385,49 +452,29 @@
     const trimmed = email.trim();
     const atPos = trimmed.indexOf("@");
     if (atPos <= 0 || atPos !== trimmed.lastIndexOf("@") || atPos === trimmed.length - 1) {
-      return "Por favor, informe um e-mail válido (ex: nome@email.com).";
+      return "Por favor, informe um e-mail válido (ex: nome@gmail.com).";
     }
 
     const domain = trimmed.slice(atPos + 1).toLowerCase();
 
-    const typoSuggestions = {
-      "gmai.com": "@gmail.com",
-      "gmaill.com": "@gmail.com",
-      "gamil.com": "@gmail.com",
-      "gmal.com": "@gmail.com",
-      "gmai.co": "@gmail.com",
-      "gmaill.co": "@gmail.com",
-      "gmai.com.br": "@gmail.com",
-      "gmaill.com.br": "@gmail.com",
-      "gamil.com.br": "@gmail.com",
-      "hotmai.com": "@hotmail.com",
-      "hotmial.com": "@hotmail.com",
-      "hotmal.com": "@hotmail.com",
-      "hotmai.co": "@hotmail.com",
-      "hotmial.com.br": "@hotmail.com.br",
-      "hotmai.com.br": "@hotmail.com.br",
-      "outloo.com": "@outlook.com",
-      "outlok.com": "@outlook.com",
-      "outlok.com.br": "@outlook.com.br",
-      "outloo.com.br": "@outlook.com.br",
-      "yaho.com": "@yahoo.com",
-      "yahooo.com": "@yahoo.com",
-      "yaho.com.br": "@yahoo.com.br",
-      "yahooo.com.br": "@yahoo.com.br",
-      "iclou.com": "@icloud.com",
-      "icloud.co": "@icloud.com",
-    };
+    if (TYPO_SUGGESTIONS[domain]) {
+      return `Domínio incorreto. Você quis dizer ${TYPO_SUGGESTIONS[domain]}?`;
+    }
 
-    if (typoSuggestions[domain]) {
-      return `Domínio incorreto. Você quis dizer ${typoSuggestions[domain]}?`;
+    if (FAKE_DOMAINS.has(domain)) {
+      return "E-mails de teste (como 'teste.com' ou 'exemplo.com') não são permitidos. Por favor, informe seu e-mail verdadeiro.";
+    }
+
+    if (DISPOSABLE_DOMAINS.has(domain)) {
+      return "E-mails temporários/descartáveis não são aceitos. Por favor, informe seu e-mail principal.";
     }
 
     if (!validateEmailDomain(domain)) {
-      return "Por favor, informe um domínio de e-mail válido (ex: nome@gmail.com).";
+      return "Por favor, informe um domínio de e-mail válido (ex: nome@gmail.com, nome@outlook.com).";
     }
 
     if (!validateEmail(trimmed)) {
-      return "Por favor, informe um e-mail válido (ex: nome@email.com).";
+      return "Por favor, informe um e-mail válido (ex: nome@gmail.com).";
     }
 
     return "";

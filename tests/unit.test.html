@@ -197,13 +197,25 @@
         });
 
         describe("Validação e captura de leads do E-book (window.MVA)", () => {
-          it("validateEmailDomain valida domínios legítimos e rejeita domínios com erros, sem TLD ou descartáveis", () => {
+          it("validateEmailDomain valida domínios legítimos e rejeita domínios de teste, falsos, sem TLD ou descartáveis", () => {
             assert(MVA.validateEmailDomain("gmail.com"), "deveria aceitar gmail.com");
             assert(MVA.validateEmailDomain("mva.com.br"), "deveria aceitar mva.com.br");
             assert(MVA.validateEmailDomain("hotmail.com"), "deveria aceitar hotmail.com");
             assert(MVA.validateEmailDomain("estudante.ufmg.br"), "deveria aceitar estudante.ufmg.br");
             assert(MVA.validateEmailDomain("startup.tech"), "deveria aceitar startup.tech");
 
+            // Domínios fictícios, de teste ou genéricos (devem ser rejeitados)
+            assert(!MVA.validateEmailDomain("teste.com"), "deveria rejeitar teste.com");
+            assert(!MVA.validateEmailDomain("teste.com.br"), "deveria rejeitar teste.com.br");
+            assert(!MVA.validateEmailDomain("exemplo.com"), "deveria rejeitar exemplo.com");
+            assert(!MVA.validateEmailDomain("domain.com"), "deveria rejeitar domain.com");
+            assert(!MVA.validateEmailDomain("test.com"), "deveria rejeitar test.com");
+            assert(!MVA.validateEmailDomain("fake.com"), "deveria rejeitar fake.com");
+            assert(!MVA.validateEmailDomain("abc.com"), "deveria rejeitar abc.com");
+            assert(!MVA.validateEmailDomain("123.com"), "deveria rejeitar 123.com");
+            assert(!MVA.validateEmailDomain("aaa.com"), "deveria rejeitar aaa.com");
+
+            // Formatos inválidos, sem TLD ou com erros de digitação/temporários
             assert(!MVA.validateEmailDomain("gmail"), "deveria rejeitar domínio sem TLD");
             assert(!MVA.validateEmailDomain("gmail.c"), "deveria rejeitar TLD com 1 caractere");
             assert(!MVA.validateEmailDomain("gmail.123"), "deveria rejeitar TLD numérico");
@@ -216,9 +228,10 @@
             assert(!MVA.validateEmailDomain("domain.invalid"), "deveria rejeitar TLD reservado invalid");
           });
 
-          it("validateEmail aceita e-mails válidos e rejeita formatos e domínios incorretos", () => {
+          it("validateEmail aceita e-mails válidos e rejeita formatos e domínios incorretos ou de teste", () => {
             assert(MVA.validateEmail("aluno@gmail.com"), "deveria aceitar aluno@gmail.com");
             assert(MVA.validateEmail("prof.ary@mva.com.br"), "deveria aceitar prof.ary@mva.com.br");
+            assert(!MVA.validateEmail("aluno@teste.com"), "deveria rejeitar aluno@teste.com");
             assert(!MVA.validateEmail("alunogmail.com"), "deveria rejeitar sem @");
             assert(!MVA.validateEmail("aluno@gmail"), "deveria rejeitar sem domínio .com/.br");
             assert(!MVA.validateEmail("aluno@gmai.com"), "deveria rejeitar domínio com digitação errada");
@@ -226,8 +239,9 @@
             assert(!MVA.validateEmail(""), "deveria rejeitar string vazia");
           });
 
-          it("getEmailErrorMessage sugere correções para erros comuns e detalha domínios inválidos", () => {
+          it("getEmailErrorMessage sugere correções para erros comuns e detalha domínios inválidos/teste", () => {
             assert(MVA.getEmailErrorMessage("aluno@gmai.com").includes("@gmail.com"), "deveria sugerir @gmail.com para gmai.com");
+            assert(MVA.getEmailErrorMessage("aluno@teste.com").includes("não são permitidos"), "deveria informar que e-mails de teste não são permitidos");
             assert(MVA.getEmailErrorMessage("aluno@gmail").includes("domínio de e-mail válido"), "deveria informar domínio inválido para falta de TLD");
             assertEqual(MVA.getEmailErrorMessage("aluno@gmail.com"), "", "não deveria retornar mensagem de erro para e-mail válido");
           });
@@ -267,34 +281,28 @@
             assertEqual(MVA.EBOOK_DOWNLOAD_URL, "assets/ebook-logaritmos-prof-ary.pdf");
           });
 
-          it("sendLeadToGoogleForm realiza requisição POST com FormData com os dados do usuário", () => {
-            let fetchCalled = false;
-            let targetUrl = "";
-            let fetchOptions = null;
-            const originalFetch = window.fetch;
-            window.fetch = function (url, options) {
-              fetchCalled = true;
-              targetUrl = url;
-              fetchOptions = options;
-              return Promise.resolve(new Response(null, { status: 200 }));
-            };
+          it("submissão com e-mail com domínio de teste/inválido BLOQUEIA o avanço do modal e o download", () => {
+            const nameEl = doc.getElementById("lead-name");
+            const emailEl = doc.getElementById("lead-email");
+            const phoneEl = doc.getElementById("lead-phone");
+            const formEl = doc.getElementById("leadForm");
+            const formContainer = doc.getElementById("leadFormContainer");
+            const successContainer = doc.getElementById("leadSuccess");
+            const errorEmail = doc.getElementById("error-email");
 
-            try {
-              MVA.sendLeadToGoogleForm("João Silva", "joao@exemplo.com", "(11) 98888-7777");
-              assert(fetchCalled, "fetch deveria ter sido chamado");
-              assertEqual(targetUrl, MVA.GOOGLE_FORM_ACTION_URL);
-              assertEqual(fetchOptions.method, "POST");
-              assertEqual(fetchOptions.mode, "no-cors");
-              assert(fetchOptions.body instanceof FormData, "body deve ser FormData");
-              assertEqual(fetchOptions.body.get("entry.66130009"), "João Silva");
-              assertEqual(fetchOptions.body.get("entry.1207926798"), "joao@exemplo.com");
-              assertEqual(fetchOptions.body.get("entry.1795649850"), "(11) 98888-7777");
-            } finally {
-              window.fetch = originalFetch;
-            }
+            nameEl.value = "Carlos Alberto";
+            emailEl.value = "carlos@teste.com";
+            phoneEl.value = "(11) 98888-7777";
+
+            formEl.dispatchEvent(new doc.defaultView.Event("submit", { bubbles: true, cancelable: true }));
+
+            assert(!formContainer.hidden, "container do formulário DEVE PERMANECER VISÍVEL");
+            assert(successContainer.hidden, "container de sucesso DEVE PERMANECER OCULTO");
+            assert(errorEmail.textContent.length > 0, "mensagem de erro para o e-mail deve ser exibida");
+            assert(emailEl.classList.contains("has-error"), "input do e-mail deve receber a classe de erro");
           });
 
-          it("submissão do formulário exibe tela de sucesso com o e-mail digitado e botão de download", () => {
+          it("submissão com e-mail válido exibe tela de sucesso com o e-mail digitado e libera o botão de download", () => {
             const nameEl = doc.getElementById("lead-name");
             const emailEl = doc.getElementById("lead-email");
             const phoneEl = doc.getElementById("lead-phone");
@@ -305,14 +313,14 @@
             const btnDownload = doc.getElementById("btnDownloadEbook");
 
             nameEl.value = "Maria Oliveira";
-            emailEl.value = "maria.oliveira@teste.com";
+            emailEl.value = "maria.oliveira@gmail.com";
             phoneEl.value = "(11) 97777-6666";
 
             formEl.dispatchEvent(new doc.defaultView.Event("submit", { bubbles: true, cancelable: true }));
 
             assert(formContainer.hidden, "container do formulário deve ficar oculto");
             assert(!successContainer.hidden, "container de sucesso deve ficar visível");
-            assertEqual(emailDisplay.textContent, "maria.oliveira@teste.com");
+            assertEqual(emailDisplay.textContent, "maria.oliveira@gmail.com");
             assert(!!btnDownload, "botão #btnDownloadEbook deve estar presente na tela de sucesso");
           });
         });
