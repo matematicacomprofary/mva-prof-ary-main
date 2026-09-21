@@ -197,12 +197,39 @@
         });
 
         describe("Validação e captura de leads do E-book (window.MVA)", () => {
-          it("validateEmail aceita e-mails válidos e rejeita formatos incorretos", () => {
+          it("validateEmailDomain valida domínios legítimos e rejeita domínios com erros, sem TLD ou descartáveis", () => {
+            assert(MVA.validateEmailDomain("gmail.com"), "deveria aceitar gmail.com");
+            assert(MVA.validateEmailDomain("mva.com.br"), "deveria aceitar mva.com.br");
+            assert(MVA.validateEmailDomain("hotmail.com"), "deveria aceitar hotmail.com");
+            assert(MVA.validateEmailDomain("estudante.ufmg.br"), "deveria aceitar estudante.ufmg.br");
+            assert(MVA.validateEmailDomain("startup.tech"), "deveria aceitar startup.tech");
+
+            assert(!MVA.validateEmailDomain("gmail"), "deveria rejeitar domínio sem TLD");
+            assert(!MVA.validateEmailDomain("gmail.c"), "deveria rejeitar TLD com 1 caractere");
+            assert(!MVA.validateEmailDomain("gmail.123"), "deveria rejeitar TLD numérico");
+            assert(!MVA.validateEmailDomain("gmail..com"), "deveria rejeitar ponto duplo");
+            assert(!MVA.validateEmailDomain("-gmail.com"), "deveria rejeitar rótulo iniciando com hífen");
+            assert(!MVA.validateEmailDomain("gmai.com"), "deveria rejeitar erro de digitação gmai.com");
+            assert(!MVA.validateEmailDomain("hotmial.com"), "deveria rejeitar erro de digitação hotmial.com");
+            assert(!MVA.validateEmailDomain("tempmail.com"), "deveria rejeitar e-mail temporário tempmail.com");
+            assert(!MVA.validateEmailDomain("mailinator.com"), "deveria rejeitar e-mail temporário mailinator.com");
+            assert(!MVA.validateEmailDomain("domain.invalid"), "deveria rejeitar TLD reservado invalid");
+          });
+
+          it("validateEmail aceita e-mails válidos e rejeita formatos e domínios incorretos", () => {
             assert(MVA.validateEmail("aluno@gmail.com"), "deveria aceitar aluno@gmail.com");
             assert(MVA.validateEmail("prof.ary@mva.com.br"), "deveria aceitar prof.ary@mva.com.br");
             assert(!MVA.validateEmail("alunogmail.com"), "deveria rejeitar sem @");
             assert(!MVA.validateEmail("aluno@gmail"), "deveria rejeitar sem domínio .com/.br");
+            assert(!MVA.validateEmail("aluno@gmai.com"), "deveria rejeitar domínio com digitação errada");
+            assert(!MVA.validateEmail("aluno@tempmail.com"), "deveria rejeitar domínio temporário");
             assert(!MVA.validateEmail(""), "deveria rejeitar string vazia");
+          });
+
+          it("getEmailErrorMessage sugere correções para erros comuns e detalha domínios inválidos", () => {
+            assert(MVA.getEmailErrorMessage("aluno@gmai.com").includes("@gmail.com"), "deveria sugerir @gmail.com para gmai.com");
+            assert(MVA.getEmailErrorMessage("aluno@gmail").includes("domínio de e-mail válido"), "deveria informar domínio inválido para falta de TLD");
+            assertEqual(MVA.getEmailErrorMessage("aluno@gmail.com"), "", "não deveria retornar mensagem de erro para e-mail válido");
           });
 
           it("validatePhone valida DDD e quantidade de dígitos (10 ou 11)", () => {
@@ -237,6 +264,7 @@
             assertEqual(MVA.GOOGLE_FORM_ENTRIES.name, "entry.66130009");
             assertEqual(MVA.GOOGLE_FORM_ENTRIES.email, "entry.1207926798");
             assertEqual(MVA.GOOGLE_FORM_ENTRIES.phone, "entry.1795649850");
+            assertEqual(MVA.EBOOK_DOWNLOAD_URL, "assets/ebook-logaritmos-prof-ary.pdf");
           });
 
           it("sendLeadToGoogleForm realiza requisição POST com FormData com os dados do usuário", () => {
@@ -264,6 +292,28 @@
             } finally {
               window.fetch = originalFetch;
             }
+          });
+
+          it("submissão do formulário exibe tela de sucesso com o e-mail digitado e botão de download", () => {
+            const nameEl = doc.getElementById("lead-name");
+            const emailEl = doc.getElementById("lead-email");
+            const phoneEl = doc.getElementById("lead-phone");
+            const formEl = doc.getElementById("leadForm");
+            const formContainer = doc.getElementById("leadFormContainer");
+            const successContainer = doc.getElementById("leadSuccess");
+            const emailDisplay = doc.getElementById("submittedEmailDisplay");
+            const btnDownload = doc.getElementById("btnDownloadEbook");
+
+            nameEl.value = "Maria Oliveira";
+            emailEl.value = "maria.oliveira@teste.com";
+            phoneEl.value = "(11) 97777-6666";
+
+            formEl.dispatchEvent(new doc.defaultView.Event("submit", { bubbles: true, cancelable: true }));
+
+            assert(formContainer.hidden, "container do formulário deve ficar oculto");
+            assert(!successContainer.hidden, "container de sucesso deve ficar visível");
+            assertEqual(emailDisplay.textContent, "maria.oliveira@teste.com");
+            assert(!!btnDownload, "botão #btnDownloadEbook deve estar presente na tela de sucesso");
           });
         });
 

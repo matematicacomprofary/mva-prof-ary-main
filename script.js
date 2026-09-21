@@ -281,11 +281,156 @@
   }
 
   /* ---------------- E-book Lead Capture Modal & Validation ---------------- */
+  /**
+   * Valida se o domínio do e-mail possui formato e TLD válidos,
+   * além de ignorar TLDs inválidos, domínios temporários e erros de digitação comuns.
+   */
+  function validateEmailDomain(domain) {
+    if (!domain || typeof domain !== "string") return false;
+    const d = domain.trim().toLowerCase();
+
+    // Rejeita se contiver espaços ou pontos duplos (ex: "gmail..com")
+    if (/\s/.test(d) || d.includes("..")) return false;
+
+    // Não pode iniciar ou terminar com ponto ou hífen
+    if (d.startsWith(".") || d.endsWith(".") || d.startsWith("-") || d.endsWith("-")) {
+      return false;
+    }
+
+    // Deve possuir ao menos um ponto separando o nome do domínio e o TLD (ex: "gmail.com")
+    const parts = d.split(".");
+    if (parts.length < 2) return false;
+
+    // O TLD (Top-Level Domain) é o último segmento (ex: "com", "br")
+    const tld = parts[parts.length - 1];
+
+    // O TLD deve conter apenas letras e ter no mínimo 2 caracteres (rejeita ".c", ".123", etc.)
+    if (!/^[a-z]{2,}$/.test(tld)) return false;
+
+    // TLDs reservados ou não roteáveis (RFC 2606 / RFC 6761)
+    const invalidTLDs = new Set(["invalid", "local", "localhost", "test", "example", "internal", "onion"]);
+    if (invalidTLDs.has(tld)) return false;
+
+    // Validação dos rótulos/subdomínios
+    for (let i = 0; i < parts.length; i++) {
+      const label = parts[i];
+      if (!label || label.length > 63) return false;
+      if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(label)) return false;
+    }
+
+    // Domínios de e-mail temporários ou descartáveis
+    const disposableDomains = new Set([
+      "mailinator.com",
+      "tempmail.com",
+      "guerrillamail.com",
+      "10minutemail.com",
+      "trashmail.com",
+      "dispostable.com",
+      "throwawaymail.com",
+      "yopmail.com",
+      "sharklasers.com",
+      "maildrop.cc",
+      "getnada.com",
+      "temp-mail.org",
+      "fakeinbox.com",
+    ]);
+    if (disposableDomains.has(d)) return false;
+
+    // Erros de digitação comuns de domínios populares
+    const typoDomains = new Set([
+      "gmai.com", "gmaill.com", "gamil.com", "gmal.com", "gmai.co", "gmaill.co", "gmai.com.br", "gmaill.com.br", "gamil.com.br",
+      "hotmai.com", "hotmial.com", "hotmal.com", "hotmai.co", "hotmial.com.br", "hotmai.com.br",
+      "outloo.com", "outlok.com", "outlok.com.br", "outloo.com.br",
+      "yaho.com", "yahooo.com", "yaho.com.br", "yahooo.com.br",
+      "iclou.com", "icloud.co",
+    ]);
+    if (typoDomains.has(d)) return false;
+
+    return true;
+  }
+
+  /**
+   * Valida se um e-mail possui estrutura local e domínio válidos.
+   */
   function validateEmail(email) {
     if (!email || typeof email !== "string") return false;
     const trimmed = email.trim();
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(trimmed);
+
+    const atPos = trimmed.indexOf("@");
+    if (atPos <= 0 || atPos !== trimmed.lastIndexOf("@") || atPos === trimmed.length - 1) {
+      return false;
+    }
+
+    const localPart = trimmed.slice(0, atPos);
+    const domainPart = trimmed.slice(atPos + 1);
+
+    if (localPart.length > 64 || localPart.includes("..") || localPart.startsWith(".") || localPart.endsWith(".")) {
+      return false;
+    }
+
+    if (!/^[a-zA-Z0-9._%+-]+$/.test(localPart)) {
+      return false;
+    }
+
+    return validateEmailDomain(domainPart);
+  }
+
+  /**
+   * Retorna a mensagem de erro específica para o e-mail ou string vazia se for válido.
+   */
+  function getEmailErrorMessage(email) {
+    if (!email || typeof email !== "string" || !email.trim()) {
+      return "Por favor, informe seu e-mail principal.";
+    }
+    const trimmed = email.trim();
+    const atPos = trimmed.indexOf("@");
+    if (atPos <= 0 || atPos !== trimmed.lastIndexOf("@") || atPos === trimmed.length - 1) {
+      return "Por favor, informe um e-mail válido (ex: nome@email.com).";
+    }
+
+    const domain = trimmed.slice(atPos + 1).toLowerCase();
+
+    const typoSuggestions = {
+      "gmai.com": "@gmail.com",
+      "gmaill.com": "@gmail.com",
+      "gamil.com": "@gmail.com",
+      "gmal.com": "@gmail.com",
+      "gmai.co": "@gmail.com",
+      "gmaill.co": "@gmail.com",
+      "gmai.com.br": "@gmail.com",
+      "gmaill.com.br": "@gmail.com",
+      "gamil.com.br": "@gmail.com",
+      "hotmai.com": "@hotmail.com",
+      "hotmial.com": "@hotmail.com",
+      "hotmal.com": "@hotmail.com",
+      "hotmai.co": "@hotmail.com",
+      "hotmial.com.br": "@hotmail.com.br",
+      "hotmai.com.br": "@hotmail.com.br",
+      "outloo.com": "@outlook.com",
+      "outlok.com": "@outlook.com",
+      "outlok.com.br": "@outlook.com.br",
+      "outloo.com.br": "@outlook.com.br",
+      "yaho.com": "@yahoo.com",
+      "yahooo.com": "@yahoo.com",
+      "yaho.com.br": "@yahoo.com.br",
+      "yahooo.com.br": "@yahoo.com.br",
+      "iclou.com": "@icloud.com",
+      "icloud.co": "@icloud.com",
+    };
+
+    if (typoSuggestions[domain]) {
+      return `Domínio incorreto. Você quis dizer ${typoSuggestions[domain]}?`;
+    }
+
+    if (!validateEmailDomain(domain)) {
+      return "Por favor, informe um domínio de e-mail válido (ex: nome@gmail.com).";
+    }
+
+    if (!validateEmail(trimmed)) {
+      return "Por favor, informe um e-mail válido (ex: nome@email.com).";
+    }
+
+    return "";
   }
 
   function validatePhone(phone) {
@@ -316,6 +461,7 @@
     email: "entry.1207926798",
     phone: "entry.1795649850",
   };
+  const EBOOK_DOWNLOAD_URL = "assets/ebook-logaritmos-prof-ary.pdf";
 
   /**
    * Envia os dados do formulário de lead em segundo plano ("debaixo dos panos") para o Google Forms.
@@ -358,12 +504,14 @@
   function initEbookModal() {
     const modal = document.getElementById("ebookModal");
     const closeBtn = document.getElementById("closeEbookModal");
+    const btnCloseSuccessModal = document.getElementById("btnCloseSuccessModal");
     const form = document.getElementById("leadForm");
     const nameInput = document.getElementById("lead-name");
     const emailInput = document.getElementById("lead-email");
     const phoneInput = document.getElementById("lead-phone");
     const formContainer = document.getElementById("leadFormContainer");
     const successContainer = document.getElementById("leadSuccess");
+    const submittedEmailDisplay = document.getElementById("submittedEmailDisplay");
 
     if (!modal) return;
 
@@ -377,6 +525,10 @@
 
     if (closeBtn) {
       closeBtn.addEventListener("click", closeEbookModal);
+    }
+
+    if (btnCloseSuccessModal) {
+      btnCloseSuccessModal.addEventListener("click", closeEbookModal);
     }
 
     modal.addEventListener("click", (e) => {
@@ -415,6 +567,23 @@
       });
     });
 
+    // Validação ao desfocar (blur) o campo de e-mail para feedback imediato sobre domínio
+    if (emailInput) {
+      emailInput.addEventListener("blur", () => {
+        const val = emailInput.value.trim();
+        if (!val) return;
+        const errMsg = getEmailErrorMessage(val);
+        const errEmail = document.getElementById("error-email");
+        if (errMsg) {
+          emailInput.classList.add("has-error");
+          if (errEmail) errEmail.textContent = errMsg;
+        } else {
+          emailInput.classList.remove("has-error");
+          if (errEmail) errEmail.textContent = "";
+        }
+      });
+    }
+
     // Form Submission with Validation
     if (form) {
       form.addEventListener("submit", (e) => {
@@ -435,12 +604,13 @@
           errName.textContent = "";
         }
 
-        // Validate Email
+        // Validate Email & Domain
         const errEmail = document.getElementById("error-email");
-        if (!validateEmail(emailVal)) {
+        const emailErrMsg = getEmailErrorMessage(emailVal);
+        if (emailErrMsg) {
           isValid = false;
           if (emailInput) emailInput.classList.add("has-error");
-          if (errEmail) errEmail.textContent = "Por favor, informe um e-mail válido (ex: nome@email.com).";
+          if (errEmail) errEmail.textContent = emailErrMsg;
         } else if (errEmail) {
           errEmail.textContent = "";
         }
@@ -474,17 +644,24 @@
           console.warn("Storage exception:", err);
         }
 
+        // Display submitted email in success view
+        if (submittedEmailDisplay) {
+          submittedEmailDisplay.textContent = emailVal.trim();
+        }
+
         // Show Success View
         if (formContainer && successContainer) {
           formContainer.hidden = true;
           successContainer.hidden = false;
         }
 
-        // Automatically open the Ebook Google Drive link in a new tab
-        const ebookUrl = "https://drive.google.com/file/d/16Q_omXgN6F1viClse3oT4OeBMDKe_oAq/view?usp=drive_link";
-        setTimeout(() => {
-          window.open(ebookUrl, "_blank");
-        }, 800);
+        // Auto trigger PDF download in browser
+        const btnDownload = document.getElementById("btnDownloadEbook");
+        if (btnDownload) {
+          setTimeout(() => {
+            btnDownload.click();
+          }, 300);
+        }
       });
     }
   }
@@ -519,7 +696,9 @@
     renderStaticFormulas,
     gcd,
     fmt,
+    validateEmailDomain,
     validateEmail,
+    getEmailErrorMessage,
     validatePhone,
     validateName,
     formatPhone,
@@ -528,6 +707,7 @@
     sendLeadToGoogleForm,
     GOOGLE_FORM_ACTION_URL,
     GOOGLE_FORM_ENTRIES,
+    EBOOK_DOWNLOAD_URL,
   };
 })();
 

@@ -608,18 +608,29 @@
 
     <!-- Tela de Sucesso -->
     <div id="leadSuccess" class="modal-success" hidden>
-      <div class="success-icon" aria-hidden="true">✓</div>
-      <h3>Parabéns! E-book de Logaritmos liberado!</h3>
-      <p class="success-msg">Seu E-book com as propriedades mais usadas de logaritmos em concursos e Enem em PDF já está pronto para leitura. Se o link não abrir automaticamente em uma nova aba, clique no botão abaixo para acessar agora mesmo:</p>
-      
-      <a id="downloadEbookLink" href="https://drive.google.com/file/d/16Q_omXgN6F1viClse3oT4OeBMDKe_oAq/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="btn btn-pill-ebook btn-block btn-lg">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="ebook-stack-icon" aria-hidden="true">
-          <rect x="3" y="7" width="12" height="12" rx="2.5" fill="#4ADE80" opacity="0.95"/>
-          <rect x="6" y="5" width="12" height="12" rx="2.5" fill="#F43F5E" opacity="0.95"/>
-          <rect x="9" y="3" width="12" height="12" rx="2.5" fill="#38BDF8" opacity="0.95"/>
+      <div class="success-icon" aria-hidden="true">🎉</div>
+      <h3>Seu E-book está pronto!</h3>
+      <p class="success-msg">Seu cadastro foi realizado com sucesso para o e-mail:</p>
+
+      <div class="email-badge-box">
+        <span class="email-badge-icon" aria-hidden="true">📧</span>
+        <strong id="submittedEmailDisplay" class="submitted-email-badge">seuemail@exemplo.com</strong>
+      </div>
+
+      <a id="btnDownloadEbook" href="assets/ebook-logaritmos-prof-ary.pdf" download="Ebook-Logaritmos-Prof-Ary.pdf" target="_blank" rel="noopener noreferrer" class="btn btn-pill-ebook btn-block btn-lg" style="margin-bottom: 12px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
-        <span>ABRIR E-BOOK GRATUITO (PDF)</span>
+        <span>BAIXAR E-BOOK GRATUITO (PDF)</span>
       </a>
+
+      <p class="success-submsg">⚡ O download é <strong>direto e imediato</strong> nesta página! Se o download não iniciar automaticamente, clique no botão acima para abrir ou salvar o PDF no seu dispositivo.</p>
+
+      <button type="button" id="btnCloseSuccessModal" class="btn btn-secondary btn-block" style="background: transparent; border: 1px solid var(--line); color: var(--ink); padding: 0.6em 1.2em; border-radius: 9999px; cursor: pointer; font-size: 0.85rem; width: 100%; font-weight: 600; margin-top: 4px; transition: all 0.2s;">
+        <span>Fechar janela</span>
+      </button>
     </div>
   </div>
 </div>
